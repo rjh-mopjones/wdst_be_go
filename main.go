@@ -33,40 +33,11 @@ type dtoRsvp struct {
 }
 
 func main() {
-
-	LOG_FILE := "wdst_be.log"
-	logFile, err := os.OpenFile(LOG_FILE, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	defer logFile.Close()
-
+	logFile := openLogFile("wdst_be.log")
 	log.SetOutput(logFile)
-
-	var (
-		host     = os.Getenv("POSTGRES_HOST")
-		port, _  = strconv.Atoi(os.Getenv("POSTGRES_PORT"))
-		user     = os.Getenv("POSTGRES_USER")
-		password = os.Getenv("POSTGRES_SECRET")
-		dbname   = os.Getenv("POSTGRES_WDST_DB")
-	)
-
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		log.Fatal(err)
-	}
+	defer logFile.Close()
+	db := connectToDb()
 	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Successfully connected to PostgreSQL!")
 
 	router := mux.NewRouter()
 
@@ -92,4 +63,40 @@ func createRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 		}
 		json.NewEncoder(writer).Encode(id)
 	}
+}
+
+func connectToDb() *sql.DB {
+	host := os.Getenv("POSTGRES_HOST")
+	port, err := strconv.Atoi(os.Getenv("POSTGRES_PORT"))
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_SECRET")
+	dbname := os.Getenv("POSTGRES_WDST_DB")
+
+	if err != nil {
+		log.Println("Error parsing POSTGRES_PORT")
+		log.Fatal(err)
+	}
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Successfully connected to PostgreSQL!")
+	return db
+}
+
+func openLogFile(logFilename string) *os.File {
+	logFile, err := os.OpenFile(logFilename, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		log.Panic(err)
+	}
+	return logFile
 }
