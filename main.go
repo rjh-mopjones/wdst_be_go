@@ -51,6 +51,7 @@ func createRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 
+		var returnIds []int
 		sqlStatement := "INSERT INTO rsvp (full_name, email, " +
 			"dinner_starter, dinner_main, dinner_dessert, " +
 			"song, message, dietary_requirements, attendance) " +
@@ -58,18 +59,29 @@ func createRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 
 		var rsvp dtoRsvp
 		_ = json.NewDecoder(request.Body).Decode(&rsvp)
+		for _, addRsvp := range rsvp.AdditionalRSVP {
+			var addId int
+			err := db.QueryRow(sqlStatement, addRsvp.FullName, rsvp.Email, addRsvp.Starter,
+				addRsvp.Main, addRsvp.Dessert, "", "",
+				addRsvp.Diet, addRsvp.Attendance).Scan(&addId)
+			if err != nil {
+				log.Fatal(err)
+			}
+			returnIds = append(returnIds, addId)
+		}
 
 		var id int
-		reqBody, _ := json.Marshal(rsvp)
 		err := db.QueryRow(sqlStatement, rsvp.FullName, rsvp.Email, rsvp.Starter,
 			rsvp.Main, rsvp.Dessert, rsvp.Song, rsvp.Message,
 			rsvp.Diet, rsvp.Attendance).Scan(&id)
-		log.Println("		ID: " + strconv.Itoa(id) + "         " + string(reqBody))
+		returnIds = append(returnIds, id)
+
+		log.Println(returnIds)
 
 		if err != nil {
 			log.Fatal(err)
 		}
-		json.NewEncoder(writer).Encode(id)
+		json.NewEncoder(writer).Encode(returnIds)
 	}
 }
 
