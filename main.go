@@ -8,6 +8,8 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 )
 
 type dtoRsvp struct {
@@ -32,25 +34,29 @@ type dtoRsvp struct {
 
 func main() {
 	// Initialize router
-	const (
-		host     = "localhost"
-		port     = 5432
-		user     = ""
-		password = ""
-		dbname   = "wedding"
+	var (
+		host      = os.Getenv("POSTGRES_HOST")
+		port, err = strconv.Atoi(os.Getenv("POSTGRES_PORT"))
+		user      = os.Getenv("POSTGRES_USER")
+		password  = os.Getenv("POSTGRES_SECRET")
+		dbname    = os.Getenv("POSTGRES_WDST_DB")
 	)
+
+	if err != nil {
+		log.Println("Error parsing POSTGRES_PORT")
+		log.Fatal(err)
+	}
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	// Connect to the PostgreSQL database
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Verify the connection
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
@@ -61,7 +67,6 @@ func main() {
 
 	router.HandleFunc("/rsvp", createRSVP(db)).Methods("POST")
 
-	// Start server
 	log.Println("Listening on port 8000")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
@@ -73,10 +78,13 @@ func createRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 		var rsvp dtoRsvp
 		var id int
 		_ = json.NewDecoder(request.Body).Decode(&rsvp)
+		reqBody, _ := json.Marshal(rsvp)
 		err := db.QueryRow(sqlStatement, rsvp.FullName).Scan(&id)
+		log.Println("		ID: " + strconv.Itoa(id) + "         " + string(reqBody))
+
 		if err != nil {
 			log.Fatal(err)
 		}
-		_ = json.NewEncoder(writer).Encode(id)
+		json.NewEncoder(writer).Encode(id)
 	}
 }
