@@ -40,6 +40,7 @@ func main() {
 	defer db.Close()
 
 	router := mux.NewRouter()
+	router.Use(enableCORS)
 	router.HandleFunc("/rsvp", createRSVP(db)).Methods("POST")
 
 	log.Println("App launched and listening on port 8000")
@@ -122,4 +123,28 @@ func openLogFile(logFilename string) *os.File {
 		log.Panic(err)
 	}
 	return logFile
+}
+
+func enableCORS(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Allow requests from any origin
+
+		w.Header().Set("Access-Control-Allow-Origin", "<origin> | homeDomain")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		// Allow specified HTTP methods
+
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Private-Network", "true")
+
+		// Allow specified headers
+
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
+
+		// Continue with the next handler
+
+		next.ServeHTTP(w, r)
+	})
 }
