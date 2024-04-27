@@ -33,19 +33,24 @@ type dtoRsvp struct {
 }
 
 func main() {
-	// Initialize router
-	var (
-		host      = os.Getenv("POSTGRES_HOST")
-		port, err = strconv.Atoi(os.Getenv("POSTGRES_PORT"))
-		user      = os.Getenv("POSTGRES_USER")
-		password  = os.Getenv("POSTGRES_SECRET")
-		dbname    = os.Getenv("POSTGRES_WDST_DB")
-	)
 
+	LOG_FILE := "wdst_be.log"
+	logFile, err := os.OpenFile(LOG_FILE, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		log.Println("Error parsing POSTGRES_PORT")
-		log.Fatal(err)
+		log.Panic(err)
 	}
+
+	defer logFile.Close()
+
+	log.SetOutput(logFile)
+
+	var (
+		host     = os.Getenv("POSTGRES_HOST")
+		port, _  = strconv.Atoi(os.Getenv("POSTGRES_PORT"))
+		user     = os.Getenv("POSTGRES_USER")
+		password = os.Getenv("POSTGRES_SECRET")
+		dbname   = os.Getenv("POSTGRES_WDST_DB")
+	)
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
