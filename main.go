@@ -40,10 +40,10 @@ func main() {
 	defer db.Close()
 
 	router := mux.NewRouter()
-
 	router.HandleFunc("/rsvp", createRSVP(db)).Methods("POST")
 
-	log.Println("Listening on port 8000")
+	log.Println("App launched and listening on port 8000")
+	fmt.Println("App launched and listening on port 8000")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
 
@@ -67,6 +67,8 @@ func createRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 			if err != nil {
 				log.Fatal(err)
 			}
+			log.Println(" ID: " + strconv.Itoa(addId) + ",  " + "Processed third party RSVP for " +
+				addRsvp.FullName + " of " + strconv.FormatBool(addRsvp.Attendance) + " by " + rsvp.FullName)
 			returnIds = append(returnIds, addId)
 		}
 
@@ -74,14 +76,15 @@ func createRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 		err := db.QueryRow(sqlStatement, rsvp.FullName, rsvp.Email, rsvp.Starter,
 			rsvp.Main, rsvp.Dessert, rsvp.Song, rsvp.Message,
 			rsvp.Diet, rsvp.Attendance).Scan(&id)
+		log.Println(" ID: " + strconv.Itoa(id) + ",  " + "Processed RSVP for " +
+			rsvp.FullName + " of " + strconv.FormatBool(rsvp.Attendance))
 		returnIds = append(returnIds, id)
-
-		log.Println(returnIds)
 
 		if err != nil {
 			log.Fatal(err)
 		}
-		json.NewEncoder(writer).Encode(returnIds)
+		writer.WriteHeader(http.StatusOK)
+		json.NewEncoder(writer).Encode("OK")
 	}
 }
 
@@ -109,7 +112,7 @@ func connectToDb() *sql.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Successfully connected to PostgreSQL!")
+	log.Println("Successfully connected to PostgreSQL on port " + os.Getenv("POSTGRES_PORT"))
 	return db
 }
 
