@@ -13,20 +13,21 @@ import (
 )
 
 func main() {
-	applicationLogFile := openLogFile("wdst.log")
+	applicationLogFile := openLogFile(os.Getenv("WDST_LOG_FILE"))
 	log.SetOutput(applicationLogFile)
 	defer applicationLogFile.Close()
 	db := db.ConnectToDb()
 	defer db.Close()
+	port := ":8000"
 
 	router := mux.NewRouter()
 	router.Use(enableCORS)
 	router.HandleFunc("/rsvp", rsvp.HandleRSVP(db)).Methods("POST")
 	router.HandleFunc("/log-server", log_server.HandleLog()).Methods("POST")
 
-	log.Println("App launched and listening on port 8000")
-	fmt.Println("App launched and listening on port 8000")
-	log.Fatal(http.ListenAndServe(":8000", router))
+	log.Println("App launched and listening on port " + port)
+	fmt.Println("App launched and listening on port " + port)
+	log.Fatal(http.ListenAndServe(port, router))
 }
 
 func openLogFile(logFilename string) *os.File {

@@ -3,6 +3,7 @@ package rsvp
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"net/smtp"
@@ -34,7 +35,6 @@ type dtoRsvp struct {
 	AdditionalRSVP []dtoAdditionalRSVP `json:"additionalRSVP"`
 }
 
-// TODO: create a hard stop via db to make sure that we don't spam emails
 func HandleRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
@@ -72,7 +72,7 @@ func HandleRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 		log.Println(" ID: " + strconv.Itoa(id) + ",  " + "Processed RSVP for " +
 			rsvp.FullName + " of " + strconv.FormatBool(rsvp.Attendance))
 
-		go receiptGenerator.sendEmail(rsvp)
+		go generateReceipt(rsvp, db)
 		returnIds = append(returnIds, id)
 
 		if err != nil {
@@ -82,6 +82,36 @@ func HandleRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 		writer.WriteHeader(http.StatusOK)
 		json.NewEncoder(writer).Encode("OK")
 	}
+}
+
+func generateReceipt(rsvp dtoRsvp, db *sql.DB) {
+	var amountOfEmails int
+	sqlStatement := "SELECT amount FROM sent_email_register WHERE email = $1"
+	err := db.QueryRow(sqlStatement, rsvp.Email).Scan(&amountOfEmails)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			insertStatement := "INSERT INTO sent_email_register (email, amount) VALUES ($1, $2) RETURNING id"
+			err2 := db.QueryRow(insertStatement, rsvp.Email, 0)
+			if err2.Err() != nil {
+				log.Fatal(err2.Err().Error())
+			}
+		} else {
+			log.Fatal(err)
+		}
+	}
+	if amountOfEmails > 5 {
+		log.Println("Spam check failed for " + rsvp.Email + " with amount " + strconv.Itoa(amountOfEmails) +
+			", blocking email receipt")
+		return
+	}
+	log.Println("Spam check passed for " + rsvp.Email + " with amount " + strconv.Itoa(amountOfEmails) +
+		", Sending email receipt")
+	updateStatement := "UPDATE sent_email_register SET amount = $1 WHERE email = $2"
+	err2 := db.QueryRow(updateStatement, amountOfEmails+1, rsvp.Email)
+	if err2.Err() != nil {
+		log.Fatal(err2.Err().Error())
+	}
+	receiptGenerator.sendEmail(rsvp)
 }
 
 func (rsvp dtoRsvp) sendEmail() bool {
