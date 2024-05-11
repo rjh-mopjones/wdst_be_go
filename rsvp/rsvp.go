@@ -34,6 +34,7 @@ type dtoRsvp struct {
 	AdditionalRSVP []dtoAdditionalRSVP `json:"additionalRSVP"`
 }
 
+// TODO: create a hard stop via db to make sure that we don't spam emails
 func HandleRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
@@ -102,7 +103,7 @@ func (rsvp dtoRsvp) sendEmail() bool {
 		return false
 	}
 
-	log.Print("sent email")
+	log.Print("sent email receipt to: " + rsvp.Email + " by " + rsvp.FullName)
 	return true
 }
 
