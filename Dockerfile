@@ -3,5 +3,6 @@ FROM golang:1.22
 WORKDIR /go/src/app
 COPY . .
 
+RUN go mod tidy
 RUN go build
-CMD ["./wdst_be"]
+ENTRYPOINT ["./wdst_be"]
