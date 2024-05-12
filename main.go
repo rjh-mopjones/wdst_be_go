@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +14,8 @@ import (
 
 func main() {
 	applicationLogFile := openLogFile(os.Getenv("WDST_LOG_FILE"))
-	log.SetOutput(applicationLogFile)
+	mw := io.MultiWriter(os.Stdout, applicationLogFile)
+	log.SetOutput(mw)
 	defer applicationLogFile.Close()
 	db := db.ConnectToDb()
 	defer db.Close()
@@ -26,7 +27,6 @@ func main() {
 	router.HandleFunc("/log-server", log_server.HandleLog()).Methods("POST")
 
 	log.Println("App launched and listening on port " + port)
-	fmt.Println("App launched and listening on port " + port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
 
