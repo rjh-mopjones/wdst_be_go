@@ -72,7 +72,9 @@ func HandleRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 		log.Println(" ID: " + strconv.Itoa(id) + ",  " + "Processed RSVP for " +
 			rsvp.FullName + " of " + strconv.FormatBool(rsvp.Attendance))
 
-		go generateReceipt(rsvp, db)
+		if rsvp.Attendance {
+			go generateReceipt(rsvp, db)
+		}
 		returnIds = append(returnIds, id)
 
 		if err != nil {
