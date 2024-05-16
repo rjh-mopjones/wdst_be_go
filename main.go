@@ -44,7 +44,7 @@ func enableCORS(next http.Handler) http.Handler {
 
 		// Allow requests from any origin
 
-		w.Header().Set("Access-Control-Allow-Origin", "<origin> | homeDomain")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		// Allow specified HTTP methods
