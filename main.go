@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 	"io"
 	"log"
 	"net/http"
@@ -22,12 +23,12 @@ func main() {
 	port := ":8000"
 
 	router := mux.NewRouter()
-	router.Use(enableCORS)
 	router.HandleFunc("/rsvp", rsvp.HandleRSVP(db)).Methods("POST")
 	router.HandleFunc("/log-server", log_server.HandleLog()).Methods("POST")
 
+	handler := cors.AllowAll().Handler(router)
 	log.Println("App launched and listening on port " + port)
-	log.Fatal(http.ListenAndServe(port, router))
+	log.Fatal(http.ListenAndServe(port, handler))
 }
 
 func openLogFile(logFilename string) *os.File {
@@ -36,28 +37,4 @@ func openLogFile(logFilename string) *os.File {
 		log.Panic(err)
 	}
 	return logFile
-}
-
-func enableCORS(next http.Handler) http.Handler {
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Allow requests from any origin
-
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		// Allow specified HTTP methods
-
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Private-Network", "true")
-
-		// Allow specified headers
-
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
-
-		// Continue with the next handler
-
-		next.ServeHTTP(w, r)
-	})
 }
