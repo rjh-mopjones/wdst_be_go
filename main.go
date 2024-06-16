@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"os"
 	"wdst_be/db"
-	log_server "wdst_be/log-server"
+	logserver "wdst_be/log-server"
 	"wdst_be/rsvp"
 )
 
 func main() {
-	applicationLogFile := openLogFile(os.Getenv("WDST_LOG_FILE"))
+	applicationLogFile := logserver.OpenLogFile(os.Getenv("WDST_LOG_FILE") + ".log")
 	mw := io.MultiWriter(os.Stdout, applicationLogFile)
 	log.SetOutput(mw)
 	defer applicationLogFile.Close()
@@ -24,17 +24,10 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/rsvp", rsvp.HandleRSVP(db)).Methods("POST")
-	router.HandleFunc("/log-server", log_server.HandleLog()).Methods("POST")
+	router.HandleFunc("/log-server", logserver.HandleLog()).Methods("POST")
+	router.HandleFunc("/log-server", logserver.RefreshLog()).Methods("GET")
 
 	handler := cors.AllowAll().Handler(router)
 	log.Println("App launched and listening on port " + port)
 	log.Fatal(http.ListenAndServe(port, handler))
-}
-
-func openLogFile(logFilename string) *os.File {
-	logFile, err := os.OpenFile(logFilename, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		log.Panic(err)
-	}
-	return logFile
 }

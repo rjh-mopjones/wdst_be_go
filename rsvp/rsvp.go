@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"wdst_be/email"
 )
 
 type dtoAdditionalRSVP struct {
@@ -110,10 +111,12 @@ func generateReceipt(rsvp dtoRsvp, db *sql.DB) {
 		", Sending email receipt")
 	updateStatement := "UPDATE sent_email_register SET amount = $1 WHERE email = $2"
 	err2 := db.QueryRow(updateStatement, amountOfEmails+1, rsvp.Email)
+
 	if err2.Err() != nil {
 		log.Fatal(err2.Err().Error())
 	}
-	receiptGenerator.sendEmail(rsvp)
+
+	email.SendEmail(rsvp.Email, rsvp.generateBody(), "Subject: Thank you for RSVPing!\n\n", "")
 }
 
 func (rsvp dtoRsvp) sendEmail() bool {
@@ -174,8 +177,4 @@ func (rsvp dtoRsvp) generateBody() string {
 	sb.WriteString("Kind Regards," + "\n")
 	sb.WriteString("Mop and Ellie" + "\n")
 	return sb.String()
-}
-
-type receiptGenerator interface {
-	sendEmail() bool
 }
