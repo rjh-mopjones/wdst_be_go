@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"net/smtp"
@@ -87,6 +88,7 @@ func (m *Message) ToBytes() []byte {
 }
 
 func SendEmail(to string, body string, subject string, attach string) bool {
+	sender := New()
 	m := NewMessage(subject, body)
 	m.To = []string{to}
 
@@ -95,6 +97,10 @@ func SendEmail(to string, body string, subject string, attach string) bool {
 		if err != nil {
 			return false
 		}
+	}
+	err := sender.Send(m)
+	if err != nil {
+		log.Println(err.Error())
 	}
 	return true
 }
