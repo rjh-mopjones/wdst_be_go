@@ -152,14 +152,14 @@ func (rsvp dtoRsvp) generateBody() string {
 		sb.WriteString("If you would like to change any details about the RSVP, you can either re-rsvp via the " +
 			"website (we will take the most recent one) or you can just reply to this email with any changes." + "\n")
 		sb.WriteString("Below are the details we have received:- " + "\n\n\n")
-		sb.WriteString("    Fullname:-                                  " + rsvp.FullName + "\n")
-		sb.WriteString("    Attenance:-                                  " + strconv.FormatBool(rsvp.Attendance) + "\n")
-		sb.WriteString("    Starter:-                                      " + rsvp.Starter + "\n")
-		sb.WriteString("    Main:-                                         " + rsvp.Main + "\n")
-		sb.WriteString("    Dessert:-                                    " + rsvp.Dessert + "\n")
-		sb.WriteString("    Song Request:-                          " + rsvp.Song + "\n")
-		sb.WriteString("    Dietary Requirements:-              " + rsvp.Diet + "\n")
-		sb.WriteString("    Message:-                          " + rsvp.Message + "\n\n\n")
+		sb.WriteString("    Fullname:- " + rsvp.FullName + "\n")
+		sb.WriteString("    Attenance:- Yes" + "\n")
+		sb.WriteString("    Starter:- " + rsvp.Starter + "\n")
+		sb.WriteString("    Main:- " + rsvp.Main + "\n")
+		sb.WriteString("    Dessert:- " + rsvp.Dessert + "\n")
+		sb.WriteString("    Song Request:- " + rsvp.Song + "\n")
+		sb.WriteString("    Dietary Requirements:- " + rsvp.Diet + "\n")
+		sb.WriteString("    Message:- " + rsvp.Message + "\n\n\n")
 		flag := true
 		for _, addRsvp := range rsvp.AdditionalRSVP {
 			if flag {
@@ -169,13 +169,15 @@ func (rsvp dtoRsvp) generateBody() string {
 				sb.WriteString("And: " + "\n\n")
 			}
 
-			sb.WriteString("    Fullname:-                                  " + addRsvp.FullName + "\n")
-			sb.WriteString("    Attendance:-                              " + strconv.FormatBool(addRsvp.Attendance) + "\n")
+			sb.WriteString("    Fullname:- " + addRsvp.FullName + "\n")
 			if addRsvp.Attendance {
-				sb.WriteString("    Starter:-                                      " + addRsvp.Starter + "\n")
-				sb.WriteString("    Main:-                                         " + addRsvp.Main + "\n")
-				sb.WriteString("    Dessert:-                                    " + addRsvp.Dessert + "\n")
-				sb.WriteString("    Dietary Requirements:-              " + addRsvp.Diet + "\n\n")
+				sb.WriteString("    Attendance:- Yes" + "\n")
+				sb.WriteString("    Starter:- " + addRsvp.Starter + "\n")
+				sb.WriteString("    Main:- " + addRsvp.Main + "\n")
+				sb.WriteString("    Dessert:- " + addRsvp.Dessert + "\n")
+				sb.WriteString("    Dietary Requirements:- " + addRsvp.Diet + "\n\n")
+			} else {
+				sb.WriteString("    Attendance:- No" + "\n")
 			}
 		}
 		sb.WriteString("We look forward to seeing you!" + "\n\n")
