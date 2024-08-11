@@ -65,6 +65,7 @@ func HandleRSVP(db *sql.DB) func(writer http.ResponseWriter, request *http.Reque
 				addRsvp.FullName + " of " + strconv.FormatBool(addRsvp.Attendance) + " by " + rsvp.FullName)
 			returnIds = append(returnIds, addId)
 		}
+		log.Println(rsvp)
 
 		var id int
 		err := db.QueryRow(sqlStatement, rsvp.FullName, rsvp.Email, rsvp.Starter,
@@ -144,34 +145,45 @@ func (rsvp dtoRsvp) sendEmail() bool {
 
 func (rsvp dtoRsvp) generateBody() string {
 	var sb strings.Builder
-	sb.WriteString("Hello " + strings.Fields(rsvp.FullName)[0] + ", \n\n")
-	sb.WriteString("We have received your RSVP and are really looking forward to seeing you on the 21st June 2025! " +
-		"This is our personal email address so you can reply to this email with any questions. \n")
-	sb.WriteString("If you would like to change any details about the RSVP, you can either re-rsvp via the " +
-		"website (we will take the most recent one) or you can just reply to this email with any changes." + "\n")
-	sb.WriteString("Below are the details we have received:- " + "\n\n\n")
-	sb.WriteString("    Fullname:-                                  " + rsvp.FullName + "\n")
-	sb.WriteString("    Starter:-                                      " + rsvp.Starter + "\n")
-	sb.WriteString("    Main:-                                         " + rsvp.Main + "\n")
-	sb.WriteString("    Dessert:-                                    " + rsvp.Dessert + "\n")
-	sb.WriteString("    Song Request:-                          " + rsvp.Song + "\n")
-	sb.WriteString("    Dietary Requirements:-              " + rsvp.Diet + "\n")
-	sb.WriteString("    Message:-                          " + rsvp.Message + "\n\n\n")
-	flag := true
-	for _, addRsvp := range rsvp.AdditionalRSVP {
-		if flag {
-			sb.WriteString("We can also see that you have RSVP'd for:- " + "\n\n")
-			flag = false
-		} else {
-			sb.WriteString("And: " + "\n\n")
+	if rsvp.Attendance {
+		sb.WriteString("Hello " + strings.Fields(rsvp.FullName)[0] + ", \n\n")
+		sb.WriteString("We have received your RSVP and are really looking forward to seeing you on the 21st June 2025! " +
+			"This is our personal email address so you can reply to this email with any questions. \n")
+		sb.WriteString("If you would like to change any details about the RSVP, you can either re-rsvp via the " +
+			"website (we will take the most recent one) or you can just reply to this email with any changes." + "\n")
+		sb.WriteString("Below are the details we have received:- " + "\n\n\n")
+		sb.WriteString("    Fullname:-                                  " + rsvp.FullName + "\n")
+		sb.WriteString("    Attenance:-                                  " + strconv.FormatBool(rsvp.Attendance) + "\n")
+		sb.WriteString("    Starter:-                                      " + rsvp.Starter + "\n")
+		sb.WriteString("    Main:-                                         " + rsvp.Main + "\n")
+		sb.WriteString("    Dessert:-                                    " + rsvp.Dessert + "\n")
+		sb.WriteString("    Song Request:-                          " + rsvp.Song + "\n")
+		sb.WriteString("    Dietary Requirements:-              " + rsvp.Diet + "\n")
+		sb.WriteString("    Message:-                          " + rsvp.Message + "\n\n\n")
+		flag := true
+		for _, addRsvp := range rsvp.AdditionalRSVP {
+			if flag {
+				sb.WriteString("We can also see that you have RSVP'd for:- " + "\n\n")
+				flag = false
+			} else {
+				sb.WriteString("And: " + "\n\n")
+			}
+
+			sb.WriteString("    Fullname:-                                  " + addRsvp.FullName + "\n")
+			sb.WriteString("    Attendance:-                              " + strconv.FormatBool(addRsvp.Attendance) + "\n")
+			if addRsvp.Attendance {
+				sb.WriteString("    Starter:-                                      " + addRsvp.Starter + "\n")
+				sb.WriteString("    Main:-                                         " + addRsvp.Main + "\n")
+				sb.WriteString("    Dessert:-                                    " + addRsvp.Dessert + "\n")
+				sb.WriteString("    Dietary Requirements:-              " + addRsvp.Diet + "\n\n")
+			}
 		}
-		sb.WriteString("    Fullname:-                                  " + addRsvp.FullName + "\n")
-		sb.WriteString("    Starter:-                                      " + addRsvp.Starter + "\n")
-		sb.WriteString("    Main:-                                         " + addRsvp.Main + "\n")
-		sb.WriteString("    Dessert:-                                    " + addRsvp.Dessert + "\n")
-		sb.WriteString("    Dietary Requirements:-              " + addRsvp.Diet + "\n\n")
+		sb.WriteString("We look forward to seeing you!" + "\n\n")
+	} else {
+		sb.WriteString("Hello " + strings.Fields(rsvp.FullName)[0] + ", \n\n")
+		sb.WriteString("We are sad to hear you cannot make it! Please feel free to reply to this email or RSVP again if anything changes." + "\n\n")
 	}
-	sb.WriteString("We look forward to seeing you!" + "\n\n")
+
 	sb.WriteString("Kind Regards," + "\n")
 	sb.WriteString("Mop and Ellie" + "\n")
 	return sb.String()
