@@ -159,19 +159,17 @@ func (rsvp dtoRsvp) generateBody() string {
 	sb.WriteString("    Message:-                          " + rsvp.Message + "\n\n\n")
 	flag := true
 	for _, addRsvp := range rsvp.AdditionalRSVP {
-		if addRsvp.Email == rsvp.Email {
-			if flag {
-				sb.WriteString("We can also see that you have RSVP'd for:- " + "\n\n")
-				flag = false
-			} else {
-				sb.WriteString("And: " + "\n\n")
-			}
-			sb.WriteString("    Fullname:-                                  " + addRsvp.FullName + "\n")
-			sb.WriteString("    Starter:-                                      " + addRsvp.Starter + "\n")
-			sb.WriteString("    Main:-                                         " + addRsvp.Main + "\n")
-			sb.WriteString("    Dessert:-                                    " + addRsvp.Dessert + "\n")
-			sb.WriteString("    Dietary Requirements:-              " + addRsvp.Diet + "\n\n")
+		if flag {
+			sb.WriteString("We can also see that you have RSVP'd for:- " + "\n\n")
+			flag = false
+		} else {
+			sb.WriteString("And: " + "\n\n")
 		}
+		sb.WriteString("    Fullname:-                                  " + addRsvp.FullName + "\n")
+		sb.WriteString("    Starter:-                                      " + addRsvp.Starter + "\n")
+		sb.WriteString("    Main:-                                         " + addRsvp.Main + "\n")
+		sb.WriteString("    Dessert:-                                    " + addRsvp.Dessert + "\n")
+		sb.WriteString("    Dietary Requirements:-              " + addRsvp.Diet + "\n\n")
 	}
 	sb.WriteString("We look forward to seeing you!" + "\n\n")
 	sb.WriteString("Kind Regards," + "\n")
